@@ -31,20 +31,19 @@ type LocalLogInfo = {
 // --------------------------------------------------------------------------------
 const Base_Constructor_key = Symbol('base_key')
 abstract class BaseSDKHandler {
-  constructor(k: symbol) {
-    if (k !== Base_Constructor_key) {
-      throw new Error(
-        'Can not constuct a BaseSDKHandler instance this way'
-      )
+    constructor(k: symbol) {
+        if (k !== Base_Constructor_key) {
+            throw new Error(
+                'Can not constuct a BaseSDKHandler instance this way'
+            )
+        }
     }
-  }
-  abstract No_emit(): boolean
-  abstract Json_data(name: string, obj: JSONValue): void
-  abstract Flush(): void
-  abstract Get_random(): number
-  abstract Set_source_name(name: string): void
+    abstract No_emit(): boolean
+    abstract Json_data(name: string, obj: JSONValue): void
+    abstract Flush(): void
+    abstract Get_random(): number
+    abstract Set_source_name(name: string): void
 }
-
 
 // --------------------------------------------------------------------------------
 // Local SDK Handler
@@ -90,12 +89,12 @@ class LocalSDKHandler extends BaseSDKHandler {
     }
 
     Flush() {
-      // intentionally NOP
+        // intentionally NOP
     }
 
     Get_random() {
-      const largest_int = Number.MAX_SAFE_INTEGER
-      return Math.floor(Math.random() * largest_int)
+        const largest_int = Number.MAX_SAFE_INTEGER
+        return Math.floor(Math.random() * largest_int)
     }
 
     Set_source_name(name: string) {
@@ -139,16 +138,15 @@ class LocalSDKHandler extends BaseSDKHandler {
         return
     }
 
-
     #log_info(name: string, obj: JSONValue) {
-      const log_info: LocalLogInfo = {
-        ticks: this.#get_ticks(),
-        time: this.#get_time(),
-        source: this.#get_source_name(),
-        stream: 'sdk',
-        [name]: obj,
-      }
-      return log_info
+        const log_info: LocalLogInfo = {
+            ticks: this.#get_ticks(),
+            time: this.#get_time(),
+            source: this.#get_source_name(),
+            stream: 'sdk',
+            [name]: obj,
+        }
+        return log_info
     }
 
     Json_data(name: string, obj: JSONValue) {
@@ -176,80 +174,84 @@ const local_handler = LocalSDKHandler._instance
 // --------------------------------------------------------------------------------
 const Voidstar_Constructor_key = Symbol('voidstar_key')
 class VoidstarSDKHandler extends BaseSDKHandler {
-  #libvoidstar?: koffi.IKoffiLib = void 0
-  #fuzz_json_data?: koffi.KoffiFunction = void 0
-  #fuzz_get_random?: koffi.KoffiFunction = void 0
-  #fuzz_flush?: koffi.KoffiFunction = void 0
-  #fuzz_set_source_name?: koffi.KoffiFunction = void 0
+    #libvoidstar?: koffi.IKoffiLib = void 0
+    #fuzz_json_data?: koffi.KoffiFunction = void 0
+    #fuzz_get_random?: koffi.KoffiFunction = void 0
+    #fuzz_flush?: koffi.KoffiFunction = void 0
+    #fuzz_set_source_name?: koffi.KoffiFunction = void 0
 
-  constructor(k: symbol) {
-    if (k !== Voidstar_Constructor_key) {
-      throw new Error(
-        'Can not constuct a VoidstarSDKHandler instance this way'
-      )
+    constructor(k: symbol) {
+        if (k !== Voidstar_Constructor_key) {
+            throw new Error(
+                'Can not constuct a VoidstarSDKHandler instance this way'
+            )
+        }
+        super(Base_Constructor_key)
+        try {
+            this.#libvoidstar = koffi.load(defaultNativeLibraryPath)
+            this.#fuzz_json_data = this.#libvoidstar.func(
+                'void fuzz_json_data(const char *data, size_t size)'
+            )
+            this.#fuzz_get_random = this.#libvoidstar.func(
+                'uint64_t fuzz_get_random()'
+            )
+            this.#fuzz_flush = this.#libvoidstar.func('void fuzz_flush()')
+            this.#fuzz_set_source_name = this.#libvoidstar.func(
+                'void fuzz_set_source_name(const char *name)'
+            )
+        } catch (erx) {
+            if (this.#libvoidstar) {
+                this.#libvoidstar.unload()
+            }
+            this.#libvoidstar = void 0
+            this.#fuzz_json_data = void 0
+            this.#fuzz_get_random = void 0
+            this.#fuzz_flush = void 0
+            this.#fuzz_set_source_name = void 0
+            console.log(`Unable to access ${defaultNativeLibraryPath}'`)
+        }
     }
-    super(Base_Constructor_key)
-    try {
-      this.#libvoidstar = koffi.load(defaultNativeLibraryPath)
-      this.#fuzz_json_data = this.#libvoidstar.func('void fuzz_json_data(const char *data, size_t size)')
-      this.#fuzz_get_random = this.#libvoidstar.func('uint64_t fuzz_get_random()')
-      this.#fuzz_flush = this.#libvoidstar.func('void fuzz_flush()')
-      this.#fuzz_set_source_name = this.#libvoidstar.func('void fuzz_set_source_name(const char *name)')
-    } catch (erx) {
-      if (this.#libvoidstar) {
-        this.#libvoidstar.unload()
-      }
-      this.#libvoidstar = void 0
-      this.#fuzz_json_data = void 0
-      this.#fuzz_get_random = void 0
-      this.#fuzz_flush = void 0
-      this.#fuzz_set_source_name = void 0
-      console.log(`Unable to access ${defaultNativeLibraryPath}'`)
+
+    No_emit() {
+        return !this.#libvoidstar
     }
-  }
 
-  No_emit() {
-    return (!this.#libvoidstar)
-  }
-
-  Json_data(name: string, obj: JSONValue) {
-    if (this.#fuzz_json_data) {
-      const log_obj = {[name]: obj}
-      const payload = JSON.stringify(log_obj)
-      this.#fuzz_json_data(payload, payload.length)
-      this.Flush()
+    Json_data(name: string, obj: JSONValue) {
+        if (this.#fuzz_json_data) {
+            const log_obj = { [name]: obj }
+            const payload = JSON.stringify(log_obj)
+            this.#fuzz_json_data(payload, payload.length)
+            this.Flush()
+        }
     }
-  }
 
-  Get_random() {
-    if (this.#fuzz_get_random) {
-      return this.#fuzz_get_random()
+    Get_random() {
+        if (this.#fuzz_get_random) {
+            return this.#fuzz_get_random()
+        }
+        return 0
     }
-    return 0
-  }
 
-  Set_source_name(name: string) {
-    if (this.#fuzz_set_source_name) {
-      this.#fuzz_set_source_name(name)
+    Set_source_name(name: string) {
+        if (this.#fuzz_set_source_name) {
+            this.#fuzz_set_source_name(name)
+        }
     }
-  }
 
-  Flush() {
-    if (this.#fuzz_flush) {
-      this.#fuzz_flush()
+    Flush() {
+        if (this.#fuzz_flush) {
+            this.#fuzz_flush()
+        }
     }
-  }
 
-  static _instance = new VoidstarSDKHandler(Voidstar_Constructor_key)
-
+    static _instance = new VoidstarSDKHandler(Voidstar_Constructor_key)
 } // class VoidstarSDKHandler
 
 const voidstar_handler = VoidstarSDKHandler._instance
-
 
 // --------------------------------------------------------------------------------
 //  libvstar - exported for SDK use
 // --------------------------------------------------------------------------------
 export const libvstar = voidstar_handler.No_emit()
-  ? local_handler
-  : voidstar_handler
+    ? local_handler
+    : voidstar_handler
