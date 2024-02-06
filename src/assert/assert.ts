@@ -1,4 +1,9 @@
-import { JSONValue } from '../internal'
+/**
+ * assert - Antithesis SDK
+ * @module antithesis-sdk/assert
+ */
+import { type JSONValue } from '../internal'
+export { type JSONValue }
 import {
     type LocationInfo,
     offsetAPICaller,

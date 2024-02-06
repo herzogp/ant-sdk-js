@@ -1,9 +1,9 @@
 {
   "source": {
     "include": [
-      "build/src/assert",
-      "build/src/lifecycle",
-      "build/src/random"
+      "dist/src/assert",
+      "dist/src/lifecycle",
+      "dist/src/random"
     ]
   },
   "plugins": [],

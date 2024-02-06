@@ -2,14 +2,15 @@
   "name": "ant-sdk-js",
   "version": "0.1.0",
   "description": "Antithesis SDK for Typescript and Javascript",
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "tsc",
     "build:all": "npm-run-all lint format test test:coverage clean && tsc",
-    "clean": "rimraf ./build",
+    "clean": "rimraf ./dist ./docs",
     "format": "npx prettier --write src",
     "format:check": "npx prettier --check src",
-    "jsdoc": "tsc && jsdoc -c jsdoc.json", 
+    "jsdoc": "tsc && jsdoc -c jsdoc.json",
     "lint": "eslint src",
     "local": "tsx src",
     "local:watch": "nodemon src -e ts,json -exec 'npm run local'",
@@ -17,6 +18,9 @@
     "test:coverage": "jest --coverage",
     "test": "jest"
   },
+  "files": [
+      "dist/src/*"
+  ],
   "keywords": [],
   "author": "",
   "license": "MIT",

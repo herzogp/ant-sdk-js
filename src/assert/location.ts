@@ -32,7 +32,8 @@ export const newLocationInfo = (nframes: StackFrameOffset) => {
     if (!e.stack) {
         return loc_info
     }
-    const regex = /^\s+[a][t]\s+(\S*)\s*\((.*):(\d+):(\d+)\)$/
+
+    const regex = /^\s+at\s+(\S*)\s*\((.*):(\d+):(\d+)\)$/
     const match = regex.exec(e.stack.split('\n')[1 + nframes])
     if (match === null || match.length < 5) {
         return loc_info
