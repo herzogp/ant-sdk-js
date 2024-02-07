@@ -4,7 +4,7 @@ import { env, hrtime } from 'node:process'
 import { fsyncSync, openSync, writeSync } from 'node:fs'
 
 const defaultNativeLibraryPath = '/usr/lib/libvoidstar.so'
-const LocalOutputEnvVar = 'ANTITHESIS_SDK_LOCAL_OUTPUT'
+export const LocalOutputEnvVar = 'ANTITHESIS_SDK_LOCAL_OUTPUT'
 
 type MaybeError = Error | undefined
 
@@ -16,7 +16,7 @@ export type JSONValue =
     | { [x: string]: JSONValue }
     | Array<JSONValue>
 
-type LocalLogInfo = {
+export type LocalLogInfo = {
     ticks: number
     time: string
     source: string

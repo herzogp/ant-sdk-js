@@ -32,3 +32,7 @@ export const SetupComplete = () => {
 export const SetSourceName = (name: string) => {
     libvstar.Set_source_name(name)
 }
+
+export const NoEmit = (): boolean => {
+    return libvstar.No_emit()
+}
